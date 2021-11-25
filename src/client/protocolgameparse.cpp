@@ -63,6 +63,9 @@ void ProtocolGame::parseMessage(const InputMessagePtr& msg)
 
             switch(opcode)
             {
+            case Proto::GameServerDisappearCreature:
+                // TODO: parsear isso aqui
+                break;
             case Proto::GameServerLoginOrPendingState:
                 parsePendingGame(msg);
                 break;
@@ -467,7 +470,9 @@ void ProtocolGame::parseMessage(const InputMessagePtr& msg)
             case Proto::GameServerSendTibiaTime:
                 parseTibiaTime(msg);
                 break;
-
+            case Proto::GameServerRefreshBestiaryTracker:
+                parseRefreshBestiaryTracker(msg);
+                break;
             default:
                 stdext::throw_exception(stdext::format("unhandled opcode %d", (int)opcode));
                 break;
@@ -725,6 +730,20 @@ void ProtocolGame::parsePvpSituations(const InputMessagePtr& msg)
     uint8 openPvpSituations = msg->getU8();
 
     g_game.setOpenPvpSituations(openPvpSituations);
+}
+
+void ProtocolGame::parseRefreshBestiaryTracker(const InputMessagePtr& msg)
+{
+    const uint8 listCount = msg->getU8();
+    for (uint_fast8_t i = 0; i < listCount; ++i)
+    {
+        msg->getU16(); // raceId
+        msg->getU32(); // killAmount
+        msg->getU16(); // bestiaryFirstUnlock
+        msg->getU16(); // bestiarySecondUnlock
+        msg->getU16(); // bestiaryToUnlock
+        msg->getU8(); // ?
+    }
 }
 
 void ProtocolGame::parseGMActions(const InputMessagePtr& msg)
@@ -1512,7 +1531,8 @@ void ProtocolGame::parsePlayerSkills(const InputMessagePtr& msg)
 
 void ProtocolGame::parsePlayerIcons(const InputMessagePtr& msg)
 {
-    m_localPlayer->setIcons(msg->getU32());
+    uint32 message = msg->getU32();
+    m_localPlayer->setIcons(message);
 }
 
 void ProtocolGame::parsePlayerCancelAttack(const InputMessagePtr& msg)
@@ -1706,71 +1726,71 @@ void ProtocolGame::parseTextMessage(const InputMessagePtr& msg)
 
     switch(mode)
     {
-    case Otc::MessageChannelManagement:
-    {
-        msg->getU16(); // channelId
-        text = msg->getString();
-        break;
-    }
-    case Otc::MessageGuild:
-    case Otc::MessagePartyManagement:
-    case Otc::MessageParty:
-    {
-        msg->getU16(); // channelId
-        text = msg->getString();
-        break;
-    }
-    case Otc::MessageDamageDealed:
-    case Otc::MessageDamageReceived:
-    case Otc::MessageDamageOthers:
-    {
-        Position pos = getPosition(msg);
-        uint value[2];
-        int color[2];
-
-        // physical damage
-        value[0] = msg->getU32();
-        color[0] = msg->getU8();
-
-        // magic damage
-        value[1] = msg->getU32();
-        color[1] = msg->getU8();
-        text = msg->getString();
-
-        for(int i = 0; i < 2; i++)
+        case Otc::MessageChannelManagement:
         {
-            if(value[i] == 0)
-                continue;
-            AnimatedTextPtr animatedText = AnimatedTextPtr(new AnimatedText);
-            animatedText->setColor(color[i]);
-            animatedText->setText(stdext::to_string(value[i]));
-            g_map.addThing(animatedText, pos);
+            msg->getU16(); // channelId
+            text = msg->getString();
+            break;
         }
-        break;
-    }
-    case Otc::MessageHeal:
-    case Otc::MessageMana:
-    case Otc::MessageExp:
-    case Otc::MessageHealOthers:
-    case Otc::MessageExpOthers:
-    {
-        Position pos = getPosition(msg);
-        uint value = msg->getU32();
-        int color = msg->getU8();
-        text = msg->getString();
+        case Otc::MessageGuild:
+        case Otc::MessagePartyManagement:
+        case Otc::MessageParty:
+        {
+            msg->getU16(); // channelId
+            text = msg->getString();
+            break;
+        }
+        case Otc::MessageDamageDealed:
+        case Otc::MessageDamageReceived:
+        case Otc::MessageDamageOthers:
+        {
+            Position pos = getPosition(msg);
+            uint value[2];
+            int color[2];
 
-        AnimatedTextPtr animatedText = AnimatedTextPtr(new AnimatedText);
-        animatedText->setColor(color);
-        animatedText->setText(stdext::to_string(value));
-        g_map.addThing(animatedText, pos);
-        break;
-    }
-    case Otc::MessageInvalid:
-        stdext::throw_exception(stdext::format("unknown message mode %d", mode));
-        break;
-    default:
-        text = msg->getString();
-        break;
+            // physical damage
+            value[0] = msg->getU32();
+            color[0] = msg->getU8();
+
+            // magic damage
+            value[1] = msg->getU32();
+            color[1] = msg->getU8();
+            text = msg->getString();
+
+            for(int i = 0; i < 2; i++)
+            {
+                if(value[i] == 0)
+                    continue;
+                AnimatedTextPtr animatedText = AnimatedTextPtr(new AnimatedText);
+                animatedText->setColor(color[i]);
+                animatedText->setText(stdext::to_string(value[i]));
+                g_map.addThing(animatedText, pos);
+            }
+            break;
+        }
+        case Otc::MessageHeal:
+        case Otc::MessageMana:
+        case Otc::MessageExp:
+        case Otc::MessageHealOthers:
+        case Otc::MessageExpOthers:
+        {
+            Position pos = getPosition(msg);
+            uint value = msg->getU32();
+            int color = msg->getU8();
+            text = msg->getString();
+
+            AnimatedTextPtr animatedText = AnimatedTextPtr(new AnimatedText);
+            animatedText->setColor(color);
+            animatedText->setText(stdext::to_string(value));
+            g_map.addThing(animatedText, pos);
+            break;
+        }
+        case Otc::MessageInvalid:
+            stdext::throw_exception(stdext::format("unknown message mode %d", mode));
+            break;
+        default:
+            text = msg->getString();
+            break;
     }
 
     g_game.processTextMessage(mode, text);

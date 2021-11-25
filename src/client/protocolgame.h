@@ -270,6 +270,7 @@ private:
     void parseError(const InputMessagePtr& msg);
     void parseCollectionResource(const InputMessagePtr& msg);
     void parseTibiaTime(const InputMessagePtr& msg);
+    void parseRefreshBestiaryTracker(const InputMessagePtr& msg);
 
 public:
     void setMapDescription(const InputMessagePtr& msg, int x, int y, int z, int width, int height);

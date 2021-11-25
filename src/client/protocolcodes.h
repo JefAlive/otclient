@@ -42,6 +42,7 @@ namespace Proto {
 
     enum GameServerOpcodes : uint8
     {
+        GameServerDisappearCreature = 0x03,
         GameServerLoginOrPendingState = 0xA,
         GameServerGMActions = 0xB,
         GameServerEnterGame = 0xF,

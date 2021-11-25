@@ -131,6 +131,14 @@ local function parseMarketBrowse(protocol, msg)
     return true
 end
 
+local function parseMarketResourcesBalance(protocol, msg)
+    local resourceType = msg:getU8() -- type
+    local value = msg:getU64() -- value
+  
+    signalcall(Market.onMarketResourceBalance, resourceType, value)
+    return true
+end
+
 -- public functions
 function initProtocol()
     connect(g_game, {
@@ -167,6 +175,8 @@ function MarketProtocol.registerProtocol()
                                     parseMarketDetail)
         ProtocolGame.registerOpcode(GameServerOpcodes.GameServerMarketBrowse,
                                     parseMarketBrowse)
+        ProtocolGame.registerOpcode(GameServerOpcodes.GameServerSendResourceBalance,
+                                    parseMarketResourcesBalance)
     end
     MarketProtocol.updateProtocol(g_game.getProtocolGame())
 end
@@ -174,13 +184,15 @@ end
 function MarketProtocol.unregisterProtocol()
     if g_game.getFeature(GamePlayerMarket) then
         ProtocolGame.unregisterOpcode(GameServerOpcodes.GameServerMarketEnter,
-                                      parseMarketEnter)
+                                    parseMarketEnter)
         ProtocolGame.unregisterOpcode(GameServerOpcodes.GameServerMarketLeave,
-                                      parseMarketLeave)
+                                    parseMarketLeave)
         ProtocolGame.unregisterOpcode(GameServerOpcodes.GameServerMarketDetail,
-                                      parseMarketDetail)
+                                    parseMarketDetail)
         ProtocolGame.unregisterOpcode(GameServerOpcodes.GameServerMarketBrowse,
-                                      parseMarketBrowse)
+                                    parseMarketBrowse)
+        ProtocolGame.unregisterOpcode(GameServerOpcodes.GameServerSendResourceBalance,
+                                    parseMarketResourcesBalance)
     end
     MarketProtocol.updateProtocol(nil)
 end
