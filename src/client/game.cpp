@@ -244,11 +244,6 @@ void Game::processGMActions(const std::vector<uint8>& actions)
     g_lua.callGlobalField("g_game", "onGMActions", actions);
 }
 
-void Game::processPlayerHelpers(int helpers)
-{
-    g_lua.callGlobalField("g_game", "onPlayerHelpersUpdate", helpers);
-}
-
 void Game::processPlayerModes(Otc::FightModes fightMode, Otc::ChaseModes chaseMode, bool safeMode, Otc::PVPModes pvpMode)
 {
     m_fightMode = fightMode;
@@ -1503,7 +1498,7 @@ void Game::setProtocolVersion(int version)
     if(isOnline())
         stdext::throw_exception("Unable to change protocol version while online");
 
-    if(version != 0 && (version < 740 || version > 1099))
+    if(version != 0 && (version < 740 || version > 1264))
         stdext::throw_exception(stdext::format("Protocol version %d not supported", version));
 
     m_protocolVersion = version;
@@ -1521,7 +1516,7 @@ void Game::setClientVersion(int version)
     if(isOnline())
         stdext::throw_exception("Unable to change client version while online");
 
-    if(version != 0 && (version < 740 || version > 1099))
+    if(version != 0 && (version < 740 || version > 1264))
         stdext::throw_exception(stdext::format("Client version %d not supported", version));
 
     m_features.reset();
